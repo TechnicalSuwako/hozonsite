@@ -14,7 +14,6 @@ func checkexist (url string, prefix string) []string {
     fmt.Println("Err:", err)
   }
   return res
-  //fmt.Println("Exist?", res)
 }
 
 func url2path (url string) string {
