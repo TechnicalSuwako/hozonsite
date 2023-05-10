@@ -35,12 +35,24 @@ func main () {
       return
     } else {
       if checkprefix(args[1]) {
-        path := mkdirs(args[1], cnf.datapath)
-        // TODO: ページの保存
-        //getpage(args[1], path)
-        // TODO: ページの確認
-        //scanpage(path)
-        fmt.Println(cnf.domain + strings.Replace(path, cnf.datapath, "", 1))
+        exist := checkexist(args[1], cnf.datapath)
+        var confirm string
+        if len(exist) > 0 {
+          fmt.Println("このページが既に保存されているみたいです。")
+          fmt.Println("本当に手続きましょうか？ [y/N]")
+          for _, ex := range exist {
+            fmt.Println(strings.Replace(ex, cnf.datapath, cnf.domain, 1))
+          }
+          fmt.Scanf("%s", &confirm)
+        }
+        if len(exist) == 0 || confirm == "y" || confirm == "Y" {
+          path := mkdirs(args[1], cnf.datapath)
+          // TODO: ページの保存
+          //getpage(args[1], path)
+          // TODO: ページの確認
+          //scanpage(path)
+          fmt.Println(cnf.domain + strings.Replace(path, cnf.datapath, "", 1))
+        }
         return
       } else {
         fmt.Println("URLは不正です。終了…")

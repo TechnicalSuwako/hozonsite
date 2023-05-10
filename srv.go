@@ -20,6 +20,10 @@ func serv (cnf Config, port int) {
 
   ftmpl := []string{cnf.webpath + "/view/index.html", cnf.webpath + "/view/header.html", cnf.webpath + "/view/footer.html"}
 
+  /*http.HandleFunc("/exist", func(w http.ResponseWriter, r *http.Request) {
+    data := &Page{Tit: "トップ", Ver: version}
+  })*/
+
   http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
     data := &Page{Tit: "トップ", Ver: version}
     cookie, err := r.Cookie("lang")

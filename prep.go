@@ -5,21 +5,36 @@ import (
   "time"
   "fmt"
   "strings"
+  "path/filepath"
 )
 
-func mkdirs (url string, prefix string) string {
-  rep := ""
-  t := time.Now().Unix()
+func checkexist (url string, prefix string) []string {
+  res, err := filepath.Glob(prefix + "/archive/*" + url2path(url))
+  if err != nil {
+    fmt.Println("Err:", err)
+  }
+  return res
+  //fmt.Println("Exist?", res)
+}
 
+func url2path (url string) string {
+  res := ""
   if strings.HasPrefix(url, "https:/") {
-    rep = strings.Replace(url, "https:/", "", 1)
+    res = strings.Replace(url, "https:/", "", 1)
   } else {
-    rep = strings.Replace(url, "http:/", "", 1)
+    res = strings.Replace(url, "http:/", "", 1)
   }
 
-  if strings.HasSuffix(rep, "/") {
-    rep = strings.TrimSuffix(rep, "/")
+  if strings.HasSuffix(res, "/") {
+    res = strings.TrimSuffix(res, "/")
   }
+
+  return res
+}
+
+func mkdirs (url string, prefix string) string {
+  rep := url2path(url)
+  t := time.Now().Unix()
 
   path := fmt.Sprint(prefix, "/archive/", t, rep)
   cmd := exec.Command("mkdir", "-p", path)
