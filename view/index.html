@@ -1,0 +1,9 @@
+{{template "header" .}}
+        {{if eq .Lan "ja"}}どのページを保存しますか？{{else}}Which page will you archive?{{end}}
+        <form action="/" method="post">
+          <input type="text" name="hozonsite" value="" />
+          <div class="submit">
+            <input type="submit" name="submit" value="{{if eq .Lan "ja"}}保存{{else}}Archive{{end}}" />
+          </div>
+        </form>
+{{template "footer" .}}
