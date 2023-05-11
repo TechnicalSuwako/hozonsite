@@ -1,7 +1,7 @@
 package main
 
 import (
-  "io/ioutil"
+  "os"
   "fmt"
   "runtime"
   "encoding/json"
@@ -31,7 +31,7 @@ func getconf () Config {
     cnf.configpath = prefix + cnf.configpath
   }
 
-  data, err := ioutil.ReadFile(cnf.configpath)
+  data, err := os.ReadFile(cnf.configpath)
   if err != nil {
     fmt.Println("エラー：", err)
   }

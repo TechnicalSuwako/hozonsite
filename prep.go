@@ -7,7 +7,7 @@ import (
   "strings"
   "path/filepath"
   "net/http"
-  "io/ioutil"
+  "io"
 )
 
 func checkexist (url string, prefix string) []string {
@@ -54,9 +54,9 @@ func getpage (url string, path string) {
   }
 
   defer curl.Body.Close()
-  body, err2 := ioutil.ReadAll(curl.Body)
+  body, err2 := io.ReadAll(curl.Body)
   if err2 != nil {
-    fmt.Println("ioutilエラ：", err2)
+    fmt.Println("読込エラ：", err2)
     return
   }
 
