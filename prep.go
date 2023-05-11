@@ -1,11 +1,13 @@
 package main
 
 import (
-  "os/exec"
+  "os"
   "time"
   "fmt"
   "strings"
   "path/filepath"
+  "net/http"
+  "io/ioutil"
 )
 
 func checkexist (url string, prefix string) []string {
@@ -36,13 +38,39 @@ func mkdirs (url string, prefix string) string {
   t := time.Now().Unix()
 
   path := fmt.Sprint(prefix, "/archive/", t, rep)
-  cmd := exec.Command("mkdir", "-p", path)
-
-  cmd.Run()
+  err := os.MkdirAll(path, 0755)
+  if err != nil {
+    fmt.Println("失敗：", err)
+  }
 
   return path
 }
 
-//func getpage (url string, path string) {}
+func getpage (url string, path string) {
+  curl, err := http.Get(url)
+  if err != nil {
+    fmt.Println("CURLエラー：", err)
+    return
+  }
+
+  defer curl.Body.Close()
+  body, err2 := ioutil.ReadAll(curl.Body)
+  if err2 != nil {
+    fmt.Println("ioutilエラ：", err2)
+    return
+  }
+
+  fn, err3 := os.Create(path + "/index.html")
+  if err3 != nil {
+    fmt.Println("ファイルの創作エラー：", err3)
+    return
+  }
+
+  defer fn.Close()
+  _, err4 := fn.WriteString(string(body))
+  if err4 != nil {
+    fmt.Println("ファイル書込エラー：", err4)
+  }
+}
 
 //func scanpage (path string) {}

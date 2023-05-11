@@ -47,8 +47,7 @@ func main () {
         }
         if len(exist) == 0 || confirm == "y" || confirm == "Y" {
           path := mkdirs(args[1], cnf.datapath)
-          // TODO: ページの保存
-          //getpage(args[1], path)
+          getpage(args[1], path)
           // TODO: ページの確認
           //scanpage(path)
           fmt.Println(cnf.domain + strings.Replace(path, cnf.datapath, "", 1))
