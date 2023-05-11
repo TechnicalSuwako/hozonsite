@@ -49,7 +49,7 @@ func main () {
           path := mkdirs(args[1], cnf.datapath)
           getpage(args[1], path)
           // TODO: ページの確認
-          //scanpage(path)
+          scanpage(path, args[1], cnf.datapath)
           fmt.Println(cnf.domain + strings.Replace(path, cnf.datapath, "", 1))
         }
         return
