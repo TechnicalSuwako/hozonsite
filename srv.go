@@ -20,22 +20,7 @@ type Page struct {
 
 func serv (cnf Config, port int) {
   http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-
   ftmpl := []string{cnf.webpath + "/view/index.html", cnf.webpath + "/view/header.html", cnf.webpath + "/view/footer.html"}
-
-  /*http.HandleFunc("/exist", func(w http.ResponseWriter, r *http.Request) {
-    data := &Page{Tit: "トップ", Ver: version}
-    cookie, err := r.Cookie("lang")
-    if err != nil {
-      data.Lan = "ja"
-    } else {
-      data.Lan = cookie.Value
-    }
-
-    if data.Lan == "en" {
-      data.Tit = "Top"
-    }
-  })*/
 
   http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
     data := &Page{Tit: "トップ", Ver: version}

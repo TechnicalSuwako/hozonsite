@@ -9,10 +9,6 @@ import (
 
 var version = "1.0.0"
 
-func checkprefix (url string) bool {
-  return strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://")
-}
-
 func help () {
   fmt.Println("使い方：");
   fmt.Println("hozonsite -v               ：バージョンを表示");
