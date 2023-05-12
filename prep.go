@@ -84,14 +84,14 @@ func scanpage (path string, domain string, thisdomain string) {
   /* 削除 */
   var script = regexp.MustCompile(`(<script.*</script>)`).ReplaceAllString(string(fn), "")
   var noscript = regexp.MustCompile(`(<noscript.*</noscript>)`).ReplaceAllString(string(script), "")
-  var audio = regexp.MustCompile(`(<script.*</script>)`).ReplaceAllString(string(noscript), "")
-  var video = regexp.MustCompile(`(<script.*</script>)`).ReplaceAllString(string(audio), "")
-  var iframe = regexp.MustCompile(`(<script.*</script>)`).ReplaceAllString(string(video), "")
+  var audio = regexp.MustCompile(`(<audio.*</audio>)`).ReplaceAllString(string(noscript), "")
+  var video = regexp.MustCompile(`(<video.*</video>)`).ReplaceAllString(string(audio), "")
+  var iframe = regexp.MustCompile(`(<iframe.*</iframe>)`).ReplaceAllString(string(video), "")
   /* 追加ダウンロード＋ローカル化 */
-  var ass = regexp.MustCompile(`(<img.*src="|<link.*href=")(.*\.)(png|webm|jpg|jpeg|gif|css)`)
+  var ass = regexp.MustCompile(`(<img.*src="|<meta.*content="|<link.*href=")(.*\.)(png|webm|jpg|jpeg|gif|css)`)
 
   for _, cssx := range ass.FindAllString(iframe, -1) {
-    s := regexp.MustCompile(`(.*src="|.*href=")`).Split(cssx, -1)
+    s := regexp.MustCompile(`(.*src="|.*content="|.*href=")`).Split(cssx, -1)
     ss := regexp.MustCompile(`(".*)`).Split(s[1], -1)
     if strings.HasPrefix(ss[0], "http://") || strings.HasPrefix(ss[0], "https://") {
       // TODO

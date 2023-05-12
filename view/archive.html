@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      .archhead {
+        background-color: #320202 !important;
+        display: block !important;
+        border: 4px #ff3b3b groove !important;
+        color: #ea8181 !important;
+        padding: 10px !important;
+        z-index: 999999 !important;
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        font-size: 14px !important;
+        font-family: unset !important;
+        width: 100% !important;
+      }
+      .archbody {
+        padding-top: 74px !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="archhead">
+      {{if eq .Lan "ja"}}保存サイトでアーカイブしました。{{else}}Archived with Hozon Site.{{end}} hozonsite-{{ .Ver }}<br />
+      <a style="color: #ffeb3b !important;" href="/">{{if eq .Lan "ja"}}トップページへ{{else}}To toppage{{end}}</a>
+    </div>
+    <div class="archbody">
+      {{ .Body }}
+    </div>
+  </body>
+</html>
