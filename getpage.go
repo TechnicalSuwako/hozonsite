@@ -17,7 +17,7 @@ func getpage (url string, path string) {
   defer curl.Body.Close()
   body, err2 := io.ReadAll(curl.Body)
   if err2 != nil {
-    fmt.Println("読込エラ：", err2)
+    fmt.Println("読込エラー：", err2)
     return
   }
 
