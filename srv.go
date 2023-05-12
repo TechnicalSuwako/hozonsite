@@ -22,19 +22,28 @@ func serv (cnf Config, port int) {
 
   /*http.HandleFunc("/exist", func(w http.ResponseWriter, r *http.Request) {
     data := &Page{Tit: "トップ", Ver: version}
+    cookie, err := r.Cookie("lang")
+    if err != nil {
+      data.Lan = "ja"
+    } else {
+      data.Lan = cookie.Value
+    }
+
+    if data.Lan == "en" {
+      data.Tit = "Top"
+    }
   })*/
 
   http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
     data := &Page{Tit: "トップ", Ver: version}
     cookie, err := r.Cookie("lang")
     if err != nil {
-      http.SetCookie(w, &http.Cookie {Name: "lang", Value: "ja", MaxAge: 31536000, Path: "/"})
-      http.Redirect(w, r, "/", http.StatusSeeOther)
-      return
+      data.Lan = "ja"
+    } else {
+      data.Lan = cookie.Value
     }
-    data.Lan = cookie.Value
 
-    if cookie.Value == "en" {
+    if data.Lan == "en" {
       data.Tit = "Top"
     }
     //tmpl := template.Must(template.ParseFiles(cnf.webpath + "/view/index.html", cnf.webpath + "/view/header.html", cnf.webpath + "/view/footer.html"))
@@ -45,23 +54,24 @@ func serv (cnf Config, port int) {
       if err != nil { fmt.Println(err) }
       // クッキー
       if r.PostForm.Get("langchange") != "" {
-        if cookie.Value == "ja" {
-          http.SetCookie(w, &http.Cookie {Name: "lang", Value: "en"})
+        cookie, err := r.Cookie("lang")
+        if err != nil || cookie.Value == "ja" {
+          http.SetCookie(w, &http.Cookie {Name: "lang", Value: "en", MaxAge: 31536000, Path: "/"})
         } else {
-          http.SetCookie(w, &http.Cookie {Name: "lang", Value: "ja"})
+          http.SetCookie(w, &http.Cookie {Name: "lang", Value: "ja", MaxAge: 31536000, Path: "/"})
         }
         http.Redirect(w, r, "/", http.StatusSeeOther)
         return
       }
 
-      // HTTPかHTTPSじゃない場合
       if r.PostForm.Get("hozonsite") != "" {
         url := r.PostForm.Get("hozonsite")
+        // HTTPかHTTPSじゃない場合
         if !checkprefix(url) {
-          if cookie.Value == "ja" {
+          if data.Lan == "ja" {
             data.Err = "URLは「http://」又は「https://」で始めます。"
           } else {
-            data.Err = "URLは「http://」又は「https://」で始めます。"
+            data.Err = "The URL should start with \"http://\" or \"https://\"."
           }
           tmpl = template.Must(template.ParseFiles(cnf.webpath + "/view/404.html", cnf.webpath + "/view/header.html", cnf.webpath + "/view/footer.html"))
         } else {
