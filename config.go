@@ -23,7 +23,7 @@ func getconf () Config {
     prefix += "/local"
   }
 
-  cnf.configpath = "/etc/hozonsite.json"
+  cnf.configpath = "/etc/hozonsite/config.json"
   //_, err = os.Stat(cnf.configpath)
   cnf.datapath = prefix + "/share/hozonsite"
 
