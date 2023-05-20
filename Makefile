@@ -14,7 +14,7 @@ CC=CGO_ENABLED=0 go build
 RELEASE=-ldflags="-s -w" -buildvcs=false
 
 all:
-	${CC} ${RELEASE} -o ${NAME} $<
+	${CC} ${RELEASE} -o ${NAME}
 
 clean:
 	rm -f ${NAME} ${NAME}-${VERSION}.tar.gz
