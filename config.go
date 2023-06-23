@@ -21,13 +21,15 @@ func getconf () Config {
   prefix := "/usr"
   if runtime.GOOS == "freebsd" || runtime.GOOS == "openbsd" {
     prefix += "/local"
+  } else if runtime.GOOS == "netbsd" {
+    prefix += "/pkg"
   }
 
   cnf.configpath = "/etc/hozonsite/config.json"
   //_, err = os.Stat(cnf.configpath)
   cnf.datapath = prefix + "/share/hozonsite"
 
-  if runtime.GOOS == "freebsd" {
+  if runtime.GOOS == "freebsd" || runtime.GOOS == "netbsd" {
     cnf.configpath = prefix + cnf.configpath
   }
 
