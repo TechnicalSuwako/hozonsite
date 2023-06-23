@@ -8,11 +8,13 @@ import (
 func getlist (lang string) []byte {
   var jloc = []byte(`{
     "top": "トップ",
-    "errfuseiurl": "URLは「http://」又は「https://」で始めます。"
+    "errfuseiurl": "URLは「http://」又は「https://」で始めます。",
+    "errfusei": "不正なエラー。"
   }`)
   var eloc = []byte(`{
     "top": "Top",
-    "errfuseiurl": "The URL should start with \"http://\" or \"https://\"."
+    "errfuseiurl": "The URL should start with \"http://\" or \"https://\".",
+    "errfusei": "Unknown error."
   }`)
 
   if lang == "en" { return eloc }

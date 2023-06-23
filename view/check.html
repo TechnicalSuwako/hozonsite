@@ -1,23 +1,28 @@
 {{template "header" .}}
-        {{if eq .Lan "ja"}}既に保存されたページ：{{else}}Pages that already got archived:{{end}}
-        {{range .Ext}}
-        <!--a href="/archive/'.$e.'/'.$url.'">
-          date('Y年m月d日 H:i:s', $e)
+        <h3>{{.Url}}</h3>
+        {{if eq .Lan "en"}}
+        Pages that already got archived:
+        {{else}}
+        既に保存されたページ：
+        {{end}}<br />
+        {{range $i, $e := .Ext}}
+        <a href="{{$e.Url}}">
+          {{$e.Date}}
         </a>
-        <br /-->
+        <br />
         {{end}}
         <p>
-          {{if eq .Lan "ja"}}
-          このページが既に保存されているみたいです。<br />本当に手続きましょうか？
-          {{else}}
+          {{if eq .Lan "en"}}
           This page seems to have been already archived.<br />Do you really want to proceed?
+          {{else}}
+          このページが既に保存されているみたいです。<br />本当に手続きましょうか？
           {{end}}
         </p>
         <form action="/" method="post">
           <input type="hidden" name="hozonsite" value="{{.Url}}" />
           <input type="hidden" name="agree" value="1" />
           <div class="submit">
-            <input type="submit" name="submit" value="{{if eq .Lan "ja"}}はい、保存して下さい！！{{else}}Yes, please archive!!{{end}}" />
+            <input type="submit" name="submit" value="{{if eq .Lan "en"}}Yes, please archive!!{{else}}はい、保存して下さい！！{{end}}" />
           </div>
         </form>
 {{template "footer" .}}

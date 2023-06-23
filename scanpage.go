@@ -25,7 +25,7 @@ func scanpage (path string, domain string, thisdomain string) error {
   var video = regexp.MustCompile(`(<video.*</video>)`).ReplaceAllString(string(audio), "")
   var iframe = regexp.MustCompile(`(<iframe.*</iframe>)`).ReplaceAllString(string(video), "")
   /* 追加ダウンロード＋ローカル化 */
-  var ass = regexp.MustCompile(`(<img.*src=['"]|<meta.*content=['"]|<link.*href=['"])(.*\.)(png|webm|jpg|jpeg|gif|css|js|ico|svg|tiff|woff2)(\?[^'"]*)?`)
+  var ass = regexp.MustCompile(`(<img.*src=['"]|<meta.*content=['"]|<link.*href=['"])(.*\.)(png|webp|jpg|jpeg|gif|css|js|ico|svg|ttf|woff2)(\?[^'"]*)?`)
 
   spath := "static/"
   if !strings.HasSuffix(path, "/") {
@@ -43,6 +43,7 @@ func scanpage (path string, domain string, thisdomain string) error {
     s := regexp.MustCompile(`(.*src=['"]|.*content=['"]|.*href=['"])`).Split(cssx, -1)
     ss := regexp.MustCompile(`(['"].*)`).Split(s[1], -1)
 
+    ogurl := ss[0]
     if strings.HasPrefix(ss[0], "//") {
       ss[0] = "https:" + ss[0]
     }
@@ -71,21 +72,27 @@ func scanpage (path string, domain string, thisdomain string) error {
         return err
       }
     } else {
-      af := domain
-      if strings.HasPrefix(ss[0], "/") {
-        af = af + ss[0]
-      } else {
-        af = af + "/" + ss[0]
+      u, err := url.Parse(domain)
+      if err != nil {
+        return err
       }
+
+      rel, err := url.Parse(ss[0])
+      if err != nil {
+        return err
+      }
+
+      af := u.ResolveReference(rel).String()
+
       err = dlres(af, filepath.Join(asspath, filename))
       if err != nil {
         return err
       }
     }
 
-    repmap[ss[0]] = filepath.Join("/static", assdom, filename)
+    repmap[ogurl] = filepath.Join("/static", assdom, filename)
     if assdom == "" {
-      repmap[ss[0]] = filepath.Join("/static", filename)
+      repmap[ogurl] = filepath.Join("/static", filename)
     }
 
     if err != nil {
@@ -114,19 +121,29 @@ func stripver (durl string) string {
     fmt.Println("エラー：", err)
     return ""
   }
+
   u.RawQuery = ""
   return u.Path
 }
 
 func dlres (durl string, dest string) error {
   // ダウンロード
-  res, err := http.Get(stripver(durl))
+  res, err := http.Get(durl)
   if err != nil {
     return err
   }
   defer res.Body.Close()
 
   dest = stripver(dest)
+
+  // MIMEタイプを確認
+  ct := res.Header.Get("Content-Type")
+  for mime, ext := range getmime() {
+    if strings.Contains(ct, mime) && !strings.HasSuffix(dest, ext) {
+      dest += ext
+      break
+    }
+  }
 
   // ファイルを作成
   f, err := os.Create(dest)
@@ -136,21 +153,9 @@ func dlres (durl string, dest string) error {
   defer f.Close()
 
   // ファイルを書き込む
-  if strings.HasSuffix(dest, "css") || strings.HasSuffix(dest, "js") {
-    body, err := io.ReadAll(res.Body)
-    if err != nil {
-      return err
-    }
-
-    _, err2 := f.WriteString(string(body))
-    if err2 != nil {
-      return err
-    }
-  } else {
-    _, err = io.Copy(f, res.Body)
-    if err != nil {
-      return err
-    }
+  _, err = io.Copy(f, res.Body)
+  if err != nil {
+    return err
   }
 
   return nil

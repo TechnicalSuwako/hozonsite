@@ -5,34 +5,43 @@ import (
   "fmt"
   "net/http"
   "strings"
+  "strconv"
+  "time"
   "os"
   "encoding/json"
 )
 
 type (
   Page struct {
-    Tit string
-    Err string
-    Lan string
-    Ver string
-    Ves string
-    Ext []string // 既に存在する場合
-    Url string // 確認ページ用
-    Body string // 保存したページ用
+    Tit, Err, Lan, Ver, Ves, Url, Body string
+    Ext []Exist // 既に存在する場合
   }
   Stat struct {
-    Url string
-    Ver string
+    Url, Ver string
+  }
+  Exist struct {
+    Date, Url string
   }
 )
 
 func initloc (r *http.Request) string {
   cookie, err := r.Cookie("lang")
-  if err != nil {
-    return "ja"
-  } else {
-    return cookie.Value
+  if err == nil && cookie.Value == "en" {
+    return "en"
   }
+  return "ja"
+}
+
+func tspath (p string) string {
+  pc := strings.Split(p, "/")
+
+  for i := len(pc) - 1; i >= 0; i-- {
+    if _, err := strconv.Atoi(pc[i]); err == nil {
+      return pc[i]
+    }
+  }
+
+  return ""
 }
 
 func siteHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
@@ -49,7 +58,11 @@ func siteHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
     data.Tit = getloc("top", lang)
     if r.Method == "POST" {
       err := r.ParseForm()
-      if err != nil { fmt.Println(err) }
+      if err != nil {
+        fmt.Println(err)
+        http.Redirect(w, r, "/", http.StatusSeeOther)
+        return
+      }
 
       // クッキー
       if r.PostForm.Get("langchange") != "" {
@@ -63,16 +76,45 @@ func siteHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
         return
       }
 
+      var exist []string
+
       if r.PostForm.Get("hozonsite") != "" {
-        fmt.Println("sasa")
         url := r.PostForm.Get("hozonsite")
-        fmt.Println(url)
         // HTTPかHTTPSじゃない場合
         if !checkprefix(url) {
           data.Err = getloc("errfuseiurl", lang)
           ftmpl[0] = cnf.webpath + "/view/404.html"
         } else {
-          //if r.PostForm.Get("sosin") != "" {}
+          eurl := stripurl(url)
+          exist = checkexist(eurl, cnf.datapath)
+          if len(exist) == 0 || r.PostForm.Get("agree") == "1" {
+            path := mkdirs(eurl, cnf.datapath)
+            getpage(url, path)
+            scanpage(path, eurl, cnf.datapath)
+            http.Redirect(w, r, cnf.domain + strings.Replace(path, cnf.datapath, "", 1), http.StatusSeeOther)
+          } else if len(exist) > 0 {
+            ftmpl[0] = cnf.webpath + "/view/check.html"
+            data.Url = url
+            var existing []Exist
+            e := Exist{}
+            for _, ex := range exist {
+              ti, err := strconv.ParseInt(tspath(ex), 10, 64)
+              if err != nil {
+                fmt.Println(err)
+                http.Redirect(w, r, "/", http.StatusSeeOther)
+                return
+              }
+
+              t := time.Unix(ti, 0)
+              e.Date = t.Format("2006年01月02日 15:04:05")
+              e.Url = strings.Replace(ex, cnf.datapath, cnf.domain, 1)
+              existing = append(existing, e)
+            }
+            data.Ext = existing
+          } else {
+            data.Err = getloc("errfusei", lang)
+            ftmpl[0] = cnf.webpath + "/view/404.html"
+          }
         }
       }
     }
@@ -118,7 +160,13 @@ func archiveHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
         pth += "index.html"
       }
 
-      bdy, err := os.ReadFile(cnf.datapath + pth)
+      file := cnf.datapath + pth
+      if _, err := os.Stat(file); os.IsNotExist(err) {
+        http.Redirect(w, r, "/404", http.StatusSeeOther)
+        return
+      }
+
+      bdy, err := os.ReadFile(file)
       if err != nil {
         http.Redirect(w, r, "/404", http.StatusSeeOther)
         return
