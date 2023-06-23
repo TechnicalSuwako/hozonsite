@@ -5,16 +5,17 @@ import (
   "fmt"
   "strings"
   "net/http"
+  "net/url"
   "io"
   "regexp"
   "errors"
+  "path/filepath"
 )
 
 func scanpage (path string, domain string, thisdomain string) error {
   fn, err := os.ReadFile(path + "/index.html")
   if err != nil {
-    fmt.Println(err)
-    return errors.New("ファイルを開けられなかった：")
+    return err
   }
 
   /* 削除 */
@@ -24,74 +25,131 @@ func scanpage (path string, domain string, thisdomain string) error {
   var video = regexp.MustCompile(`(<video.*</video>)`).ReplaceAllString(string(audio), "")
   var iframe = regexp.MustCompile(`(<iframe.*</iframe>)`).ReplaceAllString(string(video), "")
   /* 追加ダウンロード＋ローカル化 */
-  var ass = regexp.MustCompile(`(<img.*src="|<meta.*content="|<link.*href=")(.*\.)(png|webm|jpg|jpeg|gif|css|js)`)
+  var ass = regexp.MustCompile(`(<img.*src=['"]|<meta.*content=['"]|<link.*href=['"])(.*\.)(png|webm|jpg|jpeg|gif|css|js|ico|svg|tiff|woff2)(\?[^'"]*)?`)
+
   spath := "static/"
   if !strings.HasSuffix(path, "/") {
     spath = "/" + spath
   }
   spath = path + spath
-  err1 := os.Mkdir(spath, 0755)
-  if err1 != nil {
-    fmt.Println(err1)
-    return errors.New("失敗：")
+  err = os.Mkdir(spath, 0755)
+  if err != nil {
+    return err
   }
 
+  repmap := make(map[string]string)
+
   for _, cssx := range ass.FindAllString(iframe, -1) {
-    s := regexp.MustCompile(`(.*src="|.*content="|.*href=")`).Split(cssx, -1)
-    ss := regexp.MustCompile(`(".*)`).Split(s[1], -1)
-    if strings.HasPrefix(ss[0], "http://") || strings.HasPrefix(ss[0], "https://") {
-      // TODO
-    } else {
-      fss := strings.Split(ss[0], "/")
-      filename := fss[len(fss)-1]
+    s := regexp.MustCompile(`(.*src=['"]|.*content=['"]|.*href=['"])`).Split(cssx, -1)
+    ss := regexp.MustCompile(`(['"].*)`).Split(s[1], -1)
 
-      if filename == "" {
-        continue
-      }
-      f, err := os.Create(spath + filename)
-      if err != nil {
-        fmt.Println(err)
-        return errors.New("2. 作成失敗：")
-      }
-      defer f.Close()
-
-      af := domain + ss[0]
-      if !strings.HasPrefix(ss[0], "/") {
-        af = domain + "/" + ss[0]
-      }
-      i, err := http.Get(af)
-      if err != nil {
-        fmt.Println(err)
-        return errors.New("2. ダウンロードに失敗：")
-      }
-      defer i.Body.Close()
-      if strings.HasSuffix(filename, "css") || strings.HasSuffix(filename, "js") {
-        body, err := io.ReadAll(i.Body)
-        if err != nil {
-          fmt.Println(err)
-          return errors.New("2. 読込エラー：")
-        }
-
-        _, err2 := f.WriteString(string(body))
-        if err2 != nil {
-          fmt.Println(err)
-          return errors.New("2. ファイル書込エラー：")
-        }
-      } else {
-        _, err = io.Copy(f, i.Body)
-        if err != nil {
-          fmt.Println(err)
-          return errors.New("2. コピーに失敗：")
-        }
-      }
-
-      iframe = strings.Replace(iframe, ss[0], "/static/" + filename, -1)
+    if strings.HasPrefix(ss[0], "//") {
+      ss[0] = "https:" + ss[0]
     }
 
-    err := os.WriteFile(path + "/index.html", []byte(iframe), 0644)
+    fss := strings.Split(ss[0], "/")
+    assdom := ""
+    filename := fss[len(fss)-1]
+
+    if strings.HasPrefix(ss[0], "http://") || strings.HasPrefix(ss[0], "https://") {
+      assdom = fss[2]
+    }
+
+    asspath := path + "/static/" + assdom
+    err = os.MkdirAll(asspath, 0755)
+    if err != nil {
+      return err
+    }
+
+    if filename == "" {
+      continue
+    }
+
+    if strings.HasPrefix(ss[0], "http://") || strings.HasPrefix(ss[0], "https://") {
+      err = dlres(ss[0], filepath.Join(asspath, filename))
+      if err != nil {
+        return err
+      }
+    } else {
+      af := domain
+      if strings.HasPrefix(ss[0], "/") {
+        af = af + ss[0]
+      } else {
+        af = af + "/" + ss[0]
+      }
+      err = dlres(af, filepath.Join(asspath, filename))
+      if err != nil {
+        return err
+      }
+    }
+
+    repmap[ss[0]] = filepath.Join("/static", assdom, filename)
+    if assdom == "" {
+      repmap[ss[0]] = filepath.Join("/static", filename)
+    }
+
     if err != nil {
       fmt.Println(err)
-      return errors.New("書込に失敗")
+      return errors.New("2. ダウンロードに失敗：")
+    }
+  }
+
+  for ourl, lurl := range repmap {
+    aurl := strings.ReplaceAll(path, thisdomain, "") + stripver(lurl)
+    iframe = strings.ReplaceAll(iframe, ourl, aurl)
+  }
+
+  err = os.WriteFile(path + "/index.html", []byte(iframe), 0644)
+  if err != nil {
+    fmt.Println(err)
+    return errors.New("書込に失敗")
+  }
+
+  return nil
+}
+
+func stripver (durl string) string {
+  u, err := url.Parse(durl)
+  if err != nil {
+    fmt.Println("エラー：", err)
+    return ""
+  }
+  u.RawQuery = ""
+  return u.Path
+}
+
+func dlres (durl string, dest string) error {
+  // ダウンロード
+  res, err := http.Get(stripver(durl))
+  if err != nil {
+    return err
+  }
+  defer res.Body.Close()
+
+  dest = stripver(dest)
+
+  // ファイルを作成
+  f, err := os.Create(dest)
+  if err != nil {
+    return err
+  }
+  defer f.Close()
+
+  // ファイルを書き込む
+  if strings.HasSuffix(dest, "css") || strings.HasSuffix(dest, "js") {
+    body, err := io.ReadAll(res.Body)
+    if err != nil {
+      return err
+    }
+
+    _, err2 := f.WriteString(string(body))
+    if err2 != nil {
+      return err
+    }
+  } else {
+    _, err = io.Copy(f, res.Body)
+    if err != nil {
+      return err
     }
   }
 

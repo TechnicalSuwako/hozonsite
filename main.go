@@ -31,7 +31,8 @@ func main () {
       return
     } else {
       if checkprefix(args[1]) {
-        exist := checkexist(args[1], cnf.datapath)
+        eurl := stripurl(args[1])
+        exist := checkexist(eurl, cnf.datapath)
         var confirm string
         if len(exist) > 0 {
           fmt.Println("このページが既に保存されているみたいです。")
@@ -42,10 +43,9 @@ func main () {
           fmt.Scanf("%s", &confirm)
         }
         if len(exist) == 0 || confirm == "y" || confirm == "Y" {
-          path := mkdirs(args[1], cnf.datapath)
+          path := mkdirs(eurl, cnf.datapath)
           getpage(args[1], path)
-          // TODO: ページの確認
-          scanpage(path, args[1], cnf.datapath)
+          scanpage(path, eurl, cnf.datapath)
           fmt.Println(cnf.domain + strings.Replace(path, cnf.datapath, "", 1))
         }
         return

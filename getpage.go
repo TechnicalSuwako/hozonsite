@@ -5,7 +5,14 @@ import (
   "fmt"
   "net/http"
   "io"
+  "strings"
 )
+
+func stripurl (url string) string {
+  res := strings.ReplaceAll(url, "?", "")
+  res = strings.ReplaceAll(res, "=", "")
+  return res
+}
 
 func getpage (url string, path string) {
   curl, err := http.Get(url)
