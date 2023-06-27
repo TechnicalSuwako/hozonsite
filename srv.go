@@ -16,7 +16,7 @@ type (
     Tit, Err, Lan, Ver, Ves, Url, Body string
     Ext []Exist // 既に存在する場合
   }
-  Stat struct {
+  Stat struct { // APIのみ
     Url, Ver string
   }
   Exist struct {
@@ -24,6 +24,7 @@ type (
   }
 )
 
+// 日本語か英語 TODO：複数言語対応
 func initloc (r *http.Request) string {
   cookie, err := r.Cookie("lang")
   if err == nil && cookie.Value == "en" {
@@ -44,6 +45,7 @@ func tspath (p string) string {
   return ""
 }
 
+// ホームページ
 func siteHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
   return func (w http.ResponseWriter, r *http.Request) {
     ftmpl := []string{cnf.webpath + "/view/index.html", cnf.webpath + "/view/header.html", cnf.webpath + "/view/footer.html"}
@@ -124,6 +126,7 @@ func siteHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
   }
 }
 
+// /api TODO
 func apiHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
   return func (w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -133,6 +136,7 @@ func apiHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
   }
 }
 
+// /archive
 func archiveHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
   return func (w http.ResponseWriter, r *http.Request) {
     ftmpl := []string{cnf.webpath + "/view/index.html", cnf.webpath + "/view/header.html", cnf.webpath + "/view/footer.html"}
@@ -180,6 +184,7 @@ func archiveHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
   }
 }
 
+// サーバー
 func serv (cnf Config, port int) {
   http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 

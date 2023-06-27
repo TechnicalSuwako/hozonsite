@@ -13,25 +13,29 @@ import (
 )
 
 func scanpage (path string, domain string, thisdomain string) error {
+  // 先に保存したページを読み込む
   fn, err := os.ReadFile(path + "/index.html")
   if err != nil {
     return err
   }
 
-  /* 削除 */
+  // 要らないタグを削除
   var script = regexp.MustCompile(`(<script.*</script>)`).ReplaceAllString(string(fn), "")
   var noscript = regexp.MustCompile(`(<noscript.*</noscript>)`).ReplaceAllString(string(script), "")
   var audio = regexp.MustCompile(`(<audio.*</audio>)`).ReplaceAllString(string(noscript), "")
   var video = regexp.MustCompile(`(<video.*</video>)`).ReplaceAllString(string(audio), "")
   var iframe = regexp.MustCompile(`(<iframe.*</iframe>)`).ReplaceAllString(string(video), "")
-  /* 追加ダウンロード＋ローカル化 */
+  // 追加ダウンロード＋ローカル化
   var ass = regexp.MustCompile(`(<img.*src=['"]|<meta.*content=['"]|<link.*href=['"])(.*\.)(png|webp|jpg|jpeg|gif|css|js|ico|svg|ttf|woff2)(\?[^'"]*)?`)
 
+  // 必要であれば、ページ内のURLを修正
   spath := "static/"
   if !strings.HasSuffix(path, "/") {
     spath = "/" + spath
   }
   spath = path + spath
+
+  // また、追加ダウンロードのファイルに上記のフォルダを創作
   err = os.Mkdir(spath, 0755)
   if err != nil {
     return err
@@ -40,52 +44,57 @@ func scanpage (path string, domain string, thisdomain string) error {
   repmap := make(map[string]string)
 
   for _, cssx := range ass.FindAllString(iframe, -1) {
+    // ページ内のURLを受け取る
     s := regexp.MustCompile(`(.*src=['"]|.*content=['"]|.*href=['"])`).Split(cssx, -1)
     ss := regexp.MustCompile(`(['"].*)`).Split(s[1], -1)
 
-    ogurl := ss[0]
+    ogurl := ss[0] // 変わる前に元のURLを保存して
+    // URLは//で始まるは愛
     if strings.HasPrefix(ss[0], "//") {
       ss[0] = "https:" + ss[0]
     }
 
+    // ファイル名を見つけて
     fss := strings.Split(ss[0], "/")
     assdom := ""
     filename := fss[len(fss)-1]
 
+    // httpかhttpsで始まる場合
     if strings.HasPrefix(ss[0], "http://") || strings.HasPrefix(ss[0], "https://") {
       assdom = fss[2]
     }
 
+    // フォルダの創作
     asspath := path + "/static/" + assdom
     err = os.MkdirAll(asspath, 0755)
-    if err != nil {
+    if err != nil { // 出来なければ、死ね
       return err
     }
 
-    if filename == "" {
+    if filename == "" { // ファイル名がなければ、次に値にスキップしてね
       continue
     }
 
-    if strings.HasPrefix(ss[0], "http://") || strings.HasPrefix(ss[0], "https://") {
+    if strings.HasPrefix(ss[0], "http://") || strings.HasPrefix(ss[0], "https://") { // httpかhttpsで始まったら、ダウンロードだけしよう
       err = dlres(ss[0], filepath.Join(asspath, filename))
-      if err != nil {
+      if err != nil { // 出来なければ、死ね
         return err
       }
-    } else {
+    } else { // ローカルファイルなら、ちょっと変更は必要となるかしら
       u, err := url.Parse(domain)
-      if err != nil {
+      if err != nil { // 出来なければ、死ね
         return err
       }
 
       rel, err := url.Parse(ss[0])
-      if err != nil {
+      if err != nil { // 出来なければ、死ね
         return err
       }
 
       af := u.ResolveReference(rel).String()
 
       err = dlres(af, filepath.Join(asspath, filename))
-      if err != nil {
+      if err != nil { // 出来なければ、死ね
         return err
       }
     }
@@ -95,26 +104,29 @@ func scanpage (path string, domain string, thisdomain string) error {
       repmap[ogurl] = filepath.Join("/static", filename)
     }
 
-    if err != nil {
+    if err != nil { // 出来なければ、死ね
       fmt.Println(err)
-      return errors.New("2. ダウンロードに失敗：")
+      return errors.New("ダウンロードに失敗：")
     }
   }
 
+  // URLをローカル化
   for ourl, lurl := range repmap {
     aurl := strings.ReplaceAll(path, thisdomain, "") + stripver(lurl)
     iframe = strings.ReplaceAll(iframe, ourl, aurl)
   }
 
+  // index.htmlファイルを更新する
   err = os.WriteFile(path + "/index.html", []byte(iframe), 0644)
-  if err != nil {
+  if err != nil { // 出来なければ、死ね
     fmt.Println(err)
     return errors.New("書込に失敗")
   }
 
-  return nil
+  return nil // エラーが出なかったから、返すのは不要
 }
 
+// 画像、JS、CSS等ファイルのURLでパラメートルがある場合
 func stripver (durl string) string {
   u, err := url.Parse(durl)
   if err != nil {
@@ -134,7 +146,7 @@ func dlres (durl string, dest string) error {
   }
   defer res.Body.Close()
 
-  dest = stripver(dest)
+  dest = stripver(dest) // URLでパラメートルがあれば、消す
 
   // MIMEタイプを確認
   ct := res.Header.Get("Content-Type")

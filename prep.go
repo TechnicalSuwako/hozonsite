@@ -8,10 +8,12 @@ import (
   "path/filepath"
 )
 
+// HTTPかHTTPSの確認
 func checkprefix (url string) bool {
   return strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://")
 }
 
+// ページは既に存在するの？
 func checkexist (url string, prefix string) []string {
   res, err := filepath.Glob(prefix + "/archive/*" + url2path(url))
   if err != nil {
@@ -20,6 +22,7 @@ func checkexist (url string, prefix string) []string {
   return res
 }
 
+// http:/かhttps:/はいらない。最後の「/」は必要
 func url2path (url string) string {
   res := ""
   if strings.HasPrefix(url, "https:/") {
@@ -35,6 +38,7 @@ func url2path (url string) string {
   return res
 }
 
+// 必要なフォルダの創作
 func mkdirs (url string, prefix string) string {
   rep := url2path(url)
   t := time.Now().Unix()
