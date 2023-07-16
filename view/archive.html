@@ -28,8 +28,8 @@
   </head>
   <body>
     <div class="archhead">
-      {{if eq .Lan "ja"}}保存サイトでアーカイブしました。{{else}}Archived with Hozon Site.{{end}} <a class="archlink" href="https://technicalsuwako.moe/blog/hozonsite-{{.Ves}}">hozonsite-{{ .Ver }}</a><br />
-      <a class="archlink" href="/">{{if eq .Lan "ja"}}トップページへ{{else}}To toppage{{end}}</a>
+      {{.T "archwhozonsite"}} <a class="archlink" href="https://technicalsuwako.moe/blog/hozonsite-{{.Ves}}">hozonsite-{{ .Ver }}</a><br />
+      <a class="archlink" href="/">{{.T "tophe"}}</a>
     </div>
     <div class="archbody">
       {{ .Body }}

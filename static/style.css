@@ -69,8 +69,28 @@ input[type="text"] {
   border-color: #ea8181;
 }
 
-.submit, .footer, h1, .switchlang {
+select {
+  background-color: #600e0e;
+  color: #ea8181;
+  font-size: 18px;
+  border-radius: 4px;
+  max-width: 700px;
+  border: 1px #ff3b3b groove;
+  padding: 8px;
+  width: 200px;
+}
+
+select, input.langchange {
+  height: 35px;
+  vertical-align: middle;
+}
+
+.submit, .footer, h1 {
   text-align: center;
+}
+
+input.langchange {
+  font-size: 24px;
 }
 
 .submit, .footer, h1 {

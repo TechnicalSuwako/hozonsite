@@ -9,11 +9,13 @@ import (
   "time"
   "os"
   "encoding/json"
+  "gitler.moe/suwako/goliblocale"
 )
 
 type (
   Page struct {
-    Tit, Err, Lan, Ver, Ves, Url, Body string
+    Err, Lan, Ver, Ves, Url, Body string
+    i18n map[string]string
     Ext []Exist // 既に存在する場合
   }
   Stat struct { // APIのみ
@@ -23,6 +25,10 @@ type (
     Date, Url string
   }
 )
+
+func (p Page) T (key string) string {
+  return p.i18n[key]
+}
 
 // 日本語か英語 TODO：複数言語対応
 func initloc (r *http.Request) string {
@@ -52,12 +58,17 @@ func siteHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
     data := &Page{Ver: version, Ves: strings.ReplaceAll(version, ".", "")}
 
     lang := initloc(r)
-
     data.Lan = lang
+
+    i18n, err := goliblocale.GetLocale("locale/" + lang)
+    if err != nil {
+      fmt.Println("liblocaleエラー：%v", err)
+      return
+    }
+    data.i18n = i18n
     ftmpl[0] = cnf.webpath + "/view/index.html"
     tmpl := template.Must(template.ParseFiles(ftmpl[0], ftmpl[1], ftmpl[2]))
 
-    data.Tit = getloc("top", lang)
     if r.Method == "POST" {
       err := r.ParseForm()
       if err != nil {
@@ -66,14 +77,9 @@ func siteHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
         return
       }
 
-      // クッキー
-      if r.PostForm.Get("langchange") != "" {
-        cookie, err := r.Cookie("lang")
-        if err != nil || cookie.Value == "ja" {
-          http.SetCookie(w, &http.Cookie {Name: "lang", Value: "en", MaxAge: 31536000, Path: "/"})
-        } else {
-          http.SetCookie(w, &http.Cookie {Name: "lang", Value: "ja", MaxAge: 31536000, Path: "/"})
-        }
+      // 言語変更
+      if lang := r.PostFormValue("lang"); lang != "" {
+        http.SetCookie(w, &http.Cookie{Name: "lang", Value: lang, MaxAge: 31536000, Path: "/"})
         http.Redirect(w, r, "/", http.StatusSeeOther)
         return
       }
@@ -84,7 +90,7 @@ func siteHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
         url := r.PostForm.Get("hozonsite")
         // HTTPかHTTPSじゃない場合
         if !checkprefix(url) {
-          data.Err = getloc("errfuseiurl", lang)
+          data.Err = i18n["errfuseiurl"]
           ftmpl[0] = cnf.webpath + "/view/404.html"
         } else {
           eurl := stripurl(url)
@@ -114,7 +120,7 @@ func siteHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
             }
             data.Ext = existing
           } else {
-            data.Err = getloc("errfusei", lang)
+            data.Err = i18n["errfusei"]
             ftmpl[0] = cnf.webpath + "/view/404.html"
           }
         }
@@ -142,8 +148,14 @@ func archiveHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
     ftmpl := []string{cnf.webpath + "/view/index.html", cnf.webpath + "/view/header.html", cnf.webpath + "/view/footer.html"}
     data := &Page{Ver: version, Ves: strings.ReplaceAll(version, ".", "")}
     lang := initloc(r)
-
     data.Lan = lang
+
+    i18n, err := goliblocale.GetLocale("locale/" + lang)
+    if err != nil {
+      fmt.Println("liblocaleエラー：%v", err)
+      return
+    }
+    data.i18n = i18n
     ftmpl[0] = cnf.webpath + "/view/index.html"
     tmpl := template.Must(template.ParseFiles(ftmpl[0], ftmpl[1], ftmpl[2]))
     path := strings.TrimPrefix(r.URL.Path, "/archive/")

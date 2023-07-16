@@ -1,10 +1,6 @@
 {{template "header" .}}
         <h3>{{.Url}}</h3>
-        {{if eq .Lan "en"}}
-        Pages that already got archived:
-        {{else}}
-        既に保存されたページ：
-        {{end}}<br />
+        {{.T "areadyhozon"}}<br />
         {{range $i, $e := .Ext}}
         <a href="{{$e.Url}}">
           {{$e.Date}}
@@ -12,17 +8,13 @@
         <br />
         {{end}}
         <p>
-          {{if eq .Lan "en"}}
-          This page seems to have been already archived.<br />Do you really want to proceed?
-          {{else}}
-          このページが既に保存されているみたいです。<br />本当に手続きましょうか？
-          {{end}}
+          {{.T "willreallyhozon"}}
         </p>
         <form action="/" method="post">
           <input type="hidden" name="hozonsite" value="{{.Url}}" />
           <input type="hidden" name="agree" value="1" />
           <div class="submit">
-            <input type="submit" name="submit" value="{{if eq .Lan "en"}}Yes, please archive!!{{else}}はい、保存して下さい！！{{end}}" />
+            <input type="submit" name="submit" value="{{.T "yesreallyhozon"}}" />
           </div>
         </form>
 {{template "footer" .}}

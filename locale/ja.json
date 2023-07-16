@@ -1,0 +1,17 @@
+{
+  "hozonsite": "保存サイト",
+  "desc": "世界初FOSS系ウエブアーカイバーです。",
+  "logo": "ロゴ",
+  "top": "トップ",
+  "langchange": "言語変更",
+  "totop": "トップページに戻る",
+  "tophe": "トップページへ",
+  "topwhatsave": "どのページを保存しますか？",
+  "hozon": "保存",
+  "archwhozonsite": "保存サイトでアーカイブしました。",
+  "areadyhozon": "既に保存されたページ：",
+  "willreallyhozon": "このページが既に保存されているみたいです。<br />本当に手続きましょうか？",
+  "yesreallyhozon": "はい、保存して下さい！！",
+  "errfuseiurl": "URLは「http://」又は「https://」で始めます。",
+  "errfusei": "不正なエラー。"
+}

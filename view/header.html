@@ -3,24 +3,28 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
   <head>
     <meta content="text/html; charset=utf-8" http-equiv="content-type" />
-    <meta name="title" content="保存サイト" />
-    <meta name="description" content="世界初FOSS系ウエブアーカイバーです。" />
+    <meta name="title" content="{{.T "hozonsite"}}" />
+    <meta name="description" content="{{.T "desc"}}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>保存サイト〜{{.Tit}}</title>
+    <title>{{.T "hozonsite"}}〜{{.T "top"}}</title>
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
     <link rel="stylesheet" type="text/css" href="/static/style.css" />
   </head>
   <body>
     <h1>
-      <img class="headerimg" src="/static/logo.jpg" alt="{{if eq .Lan "ja"}}ロゴ{{else}}Logo{{end}}" />
+      <img class="headerimg" src="/static/logo.jpg" alt="{{.T "logo"}}" />
     </h1>
     <div class="body">
       <p>
-        <a href="/">{{if eq .Lan "ja"}}トップ{{else}}Top{{end}}</a>
+        <a href="/">{{.T "top"}}</a>
       </p>
       <form method="post" action="/">
-        <div class="switchlang">
-          <input class="langchange" type="submit" name="langchange" value="{{if eq .Lan "ja"}}Change to English{{else}}日本語に変更する{{end}}" />
+        <div class="central">
+          <select class="langchange" name="lang">
+            <option value="ja"{{if eq .Lan "ja"}} selected{{end}}>日本語</option>
+            <option value="en"{{if eq .Lan "en"}} selected{{end}}>English</option>
+          </select>
+          <input class="langchange" type="submit" name="chen" value="{{.T "langchange"}}" />
         </div>
       </form>
       <hr />

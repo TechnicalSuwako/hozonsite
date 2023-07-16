@@ -1,0 +1,17 @@
+{
+  "hozonsite": "Hozon Site",
+  "desc": "It is the world's first FOSS web archiver.",
+  "logo": "Logo",
+  "top": "Top",
+  "langchange": "Language change",
+  "totop": "Return to toppage",
+  "tophe": "To toppage.",
+  "topwhatsave": "Which page will you archive?",
+  "hozon": "Archive",
+  "archwhozonsite": "Archived with Hozon Site.",
+  "areadyhozon": "Pages that already got archived:",
+  "willreallyhozon": "This page seems to have been already archived.<br />Do you really want to proceed?",
+  "yesreallyhozon": "Yes, please archive!!",
+  "errfuseiurl": "The URL should start with \"http://\" or \"https://\".",
+  "errfusei": "Unknown error."
+}
