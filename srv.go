@@ -30,13 +30,23 @@ func (p Page) T (key string) string {
   return p.i18n[key]
 }
 
-// 日本語か英語 TODO：複数言語対応
+// 言語設定、デフォルト＝ja
 func initloc (r *http.Request) string {
-  cookie, err := r.Cookie("lang")
-  if err == nil && cookie.Value == "en" {
-    return "en"
+  supportedLanguages := map[string]bool{
+    "ja": true,
+    "en": true,
   }
-  return "ja"
+
+  cookie, err := r.Cookie("lang")
+  if err != nil {
+    return "ja"
+  }
+
+  if _, ok := supportedLanguages[cookie.Value]; ok {
+    return cookie.Value
+  } else {
+    return "ja"
+  }
 }
 
 func tspath (p string) string {
