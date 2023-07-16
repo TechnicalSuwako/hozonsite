@@ -1,4 +1,5 @@
 {
   "webpath": "/var/www/htdocs/hozonsite",
-  "domain": "https://hozon.site"
+  "domain": "https://hozon.site",
+  "ip": "0.0.0.0"
 }

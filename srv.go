@@ -204,6 +204,6 @@ func serv (cnf Config, port int) {
   http.HandleFunc("/archive/", archiveHandler(cnf))
   http.HandleFunc("/", siteHandler(cnf))
 
-  fmt.Println(fmt.Sprint("http://127.0.0.1:", port, " でサーバーを実行中。終了するには、CTRL+Cを押して下さい。"))
-  http.ListenAndServe(fmt.Sprint(":", port), nil)
+  fmt.Println(fmt.Sprint("http://" + cnf.ip + ":", port, " でサーバーを実行中。終了するには、CTRL+Cを押して下さい。"))
+  http.ListenAndServe(fmt.Sprint(cnf.ip + ":", port), nil)
 }

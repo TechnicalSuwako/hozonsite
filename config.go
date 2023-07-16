@@ -5,14 +5,15 @@ import (
   "fmt"
   "runtime"
   "encoding/json"
+  "io/ioutil"
+  "errors"
 )
 
 type Config struct {
-  configpath, webpath, datapath, domain string
+  configpath, webpath, datapath, domain, ip string
 }
 
-func getconf () Config {
-  var payload map[string]interface{}
+func getconf () (Config, error) {
   var cnf Config
 
   // バイナリ、データ、及びFreeBSDとNetBSDの場合、コンフィグ
@@ -36,14 +37,31 @@ func getconf () Config {
   }
 
   // コンフィグファイルがなければ、死ね
-  data, err := os.ReadFile(cnf.configpath)
+  data, err := ioutil.ReadFile(cnf.configpath)
   if err != nil {
-    fmt.Println("エラー：", err)
+    fmt.Println("confif.jsonを開けられません：", err)
+    return cnf, errors.New("コンフィグファイルは " + cnf.configpath + " に創作して下さい。")
   }
+
+  var payload map[string]interface{}
   json.Unmarshal(data, &payload)
+  if payload["webpath"] == nil {
+    return cnf, errors.New("「webpath」の値が設置していません。")
+  }
+  if payload["domain"] == nil {
+    return cnf, errors.New("「domain」の値が設置していません。")
+  }
+  if payload["ip"] == nil {
+    return cnf, errors.New("「ip」の値が設置していません。")
+  }
+  if _, err := os.Stat(payload["webpath"].(string)); err != nil {
+    fmt.Printf("%v\n", err)
+    return cnf, errors.New("mkdiorコマンドをつかって、 " + payload["webpath"].(string))
+  }
   cnf.webpath = payload["webpath"].(string) // データパス
   cnf.domain = payload["domain"].(string) // ドメイン名
+  cnf.ip = payload["ip"].(string) // IP
   payload = nil // もういらなくなった
 
-  return cnf
+  return cnf, nil
 }

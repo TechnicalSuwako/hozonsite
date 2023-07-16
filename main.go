@@ -18,7 +18,11 @@ func help () {
 }
 
 func main () {
-  cnf := getconf() // コンフィグファイル
+  cnf, err := getconf() // コンフィグファイル
+  if err != nil {
+    fmt.Println(err)
+    return
+  }
   args := os.Args // コマンドラインのパラメートル
   if len(args) == 2 {
     if args[1] == "-v" { // バージョンを表示
