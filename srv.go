@@ -70,7 +70,7 @@ func siteHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
     lang := initloc(r)
     data.Lan = lang
 
-    i18n, err := goliblocale.GetLocale("locale/" + lang)
+    i18n, err := goliblocale.GetLocale(cnf.webpath + "/locale/" + lang)
     if err != nil {
       fmt.Println("liblocaleエラー：%v", err)
       return
@@ -160,7 +160,7 @@ func archiveHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
     lang := initloc(r)
     data.Lan = lang
 
-    i18n, err := goliblocale.GetLocale("locale/" + lang)
+    i18n, err := goliblocale.GetLocale(cnf.webpath + "/locale/" + lang)
     if err != nil {
       fmt.Println("liblocaleエラー：%v", err)
       return
