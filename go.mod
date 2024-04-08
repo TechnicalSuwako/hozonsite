@@ -1,4 +1,4 @@
-module 076/hozonsite
+module gitler.moe/suwako/hozonsite
 
 go 1.20
 

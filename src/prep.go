@@ -1,4 +1,4 @@
-package main
+package src
 
 import (
   "os"
@@ -9,14 +9,14 @@ import (
 )
 
 // HTTPかHTTPSの確認
-func checkprefix (url string) bool {
+func Checkprefix (url string) bool {
   return strings.HasPrefix(
     url, "http://") || strings.HasPrefix(url, "https://",
   )
 }
 
 // ページは既に存在するの？
-func checkexist (url string, prefix string) []string {
+func Checkexist (url string, prefix string) []string {
   res, err := filepath.Glob(prefix + "/archive/*" + url2path(url))
   if err != nil {
     fmt.Println("Err:", err)
@@ -41,7 +41,7 @@ func url2path (url string) string {
 }
 
 // 必要なフォルダの創作
-func mkdirs (url string, prefix string) string {
+func Mkdirs (url string, prefix string) string {
   rep := url2path(url)
   t := time.Now().Unix()
 

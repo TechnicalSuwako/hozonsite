@@ -1,4 +1,4 @@
-package main
+package src
 
 import (
   "os"
@@ -9,13 +9,13 @@ import (
 )
 
 // URLでパラメートル（?、=等）がある場合
-func stripurl (url string) string {
+func Stripurl (url string) string {
   res := strings.ReplaceAll(url, "?", "")
   res = strings.ReplaceAll(res, "=", "")
   return res
 }
 
-func getpage (url string, path string) {
+func Getpage (url string, path string) {
   // ページを読み込む
   curl, err := http.Get(url)
   if err != nil {

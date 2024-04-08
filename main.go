@@ -5,34 +5,42 @@ import (
   "os"
   "strings"
   "strconv"
-)
 
-var sofname = "hozonsite"
-var version = "1.1.1"
+  "gitler.moe/suwako/hozonsite/src"
+  "gitler.moe/suwako/hozonsite/common"
+)
 
 func help() {
   fmt.Println("使い方：")
-  fmt.Println(sofname + " -v               ：バージョンを表示")
   fmt.Println(
-    sofname +
+    common.GetSofname() + " -v               ：バージョンを表示",
+  )
+  fmt.Println(
+    common.GetSofname() +
     " -s [ポート番号]  ：ポート番号でウェブサーバーを実行（デフォルト＝9920）",
   )
-  fmt.Println(sofname + " -h               ：ヘルプを表示")
-  fmt.Println(sofname + " <URL>            ：コマンドラインでウェブサイトを保存")
+  fmt.Println(
+    common.GetSofname() +
+    " -h               ：ヘルプを表示",
+  )
+  fmt.Println(
+    common.GetSofname() +
+    " <URL>            ：コマンドラインでウェブサイトを保存",
+  )
 }
 
-func saveurlcmd(url string, cnf Config) {
+func saveurlcmd(url string, cnf src.Config) {
   // 結局HTTPかHTTPSじゃないわね…
-  if !checkprefix(url) {
+  if !src.Checkprefix(url) {
     fmt.Println("URLは不正です。終了…")
     return
   }
 
   // パラメートルの文字（?、=等）を削除
-  eurl := stripurl(url)
+  eurl := src.Stripurl(url)
 
   // 既に/usr/local/share/hozonsite/archiveに存在するかどうか
-  exist := checkexist(eurl, cnf.datapath)
+  exist := src.Checkexist(eurl, cnf.Datapath)
 
   // 既に存在したら、使う
   var confirm string
@@ -44,26 +52,26 @@ func saveurlcmd(url string, cnf Config) {
 
     // 既に存在するページのURLを表示
     for _, ex := range exist {
-      fmt.Println(strings.Replace(ex, cnf.datapath, cnf.domain, 1))
+      fmt.Println(strings.Replace(ex, cnf.Datapath, cnf.Domain, 1))
     }
     fmt.Scanf("%s", &confirm)
   }
 
   // 存在しない OR 「本当に手続きましょうか？」でYを入力した場合
   if len(exist) == 0 || confirm == "y" || confirm == "Y" {
-    path := mkdirs(eurl, cnf.datapath)
+    path := src.Mkdirs(eurl, cnf.Datapath)
     // ページをダウンロード
-    getpage(url, path)
+    src.Getpage(url, path)
     // 色々の必須な編集
-    scanpage(path, eurl, cnf.datapath)
+    src.Scanpage(path, eurl, cnf.Datapath)
     // 新しいURLを表示
-    fmt.Println(cnf.domain + strings.Replace(path, cnf.datapath, "", 1))
+    fmt.Println(cnf.Domain + strings.Replace(path, cnf.Datapath, "", 1))
   }
 }
 
 func main() {
   // コンフィグファイル
-  cnf, err := getconf()
+  cnf, err := src.Getconf()
   if err != nil {
     fmt.Println(err)
     return
@@ -75,10 +83,10 @@ func main() {
   if len(args) == 2 {
     // バージョンを表示
     if args[1] == "-v" {
-      fmt.Println(sofname + "-" + version)
+      fmt.Println(common.GetSofname() + "-" + common.GetVersion())
       return
     } else if args[1] == "-s" { // :9920でウェブサーバーを実行
-      serv(cnf, 9920)
+      src.Serv(cnf, 9920)
     } else if args[1] == "-h" { // ヘルプを表示
       help()
       return
@@ -95,7 +103,7 @@ func main() {
       return
     } else {
       // OK、実行しよ〜
-      serv(cnf, port)
+      src.Serv(cnf, port)
     }
   } else {
     // パラメートルは不明の場合、ヘルプを表示

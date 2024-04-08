@@ -1,4 +1,4 @@
-package main
+package src
 
 import (
   "os"
@@ -12,7 +12,7 @@ import (
   "path/filepath"
 )
 
-func scanpage (path string, domain string, thisdomain string) error {
+func Scanpage (path string, domain string, thisdomain string) error {
   // 先に保存したページを読み込む
   fn, err := os.ReadFile(path + "/index.html")
   if err != nil { return err }

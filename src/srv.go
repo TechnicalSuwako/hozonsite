@@ -1,4 +1,4 @@
-package main
+package src
 
 import (
   "text/template"
@@ -9,6 +9,8 @@ import (
   "time"
   "os"
   "encoding/json"
+
+  "gitler.moe/suwako/hozonsite/common"
   "gitler.moe/suwako/goliblocale"
 )
 
@@ -76,7 +78,7 @@ func handleStatic(path string, cnf Config, w http.ResponseWriter, r *http.Reques
     return
   }
 
-  fpath := cnf.datapath + "/archive/" + path
+  fpath := cnf.Datapath + "/archive/" + path
   http.ServeFile(w, r, fpath)
 }
 
@@ -100,7 +102,7 @@ func handlePost(w http.ResponseWriter, r *http.Request, cnf Config) {
 
   var exist []string
   langu := initloc(r)
-  i18n, err := goliblocale.GetLocale(cnf.webpath + "/locale/" + langu)
+  i18n, err := goliblocale.GetLocale(cnf.Webpath + "/locale/" + langu)
   if err != nil {
     fmt.Printf("liblocaleエラー：%v", err)
     return
@@ -108,34 +110,34 @@ func handlePost(w http.ResponseWriter, r *http.Request, cnf Config) {
 
   if r.PostForm.Get("hozonsite") == "" {
     data.Err = i18n["errfusei"]
-    ftmpl[0] = cnf.webpath + "/view/404.html"
+    ftmpl[0] = cnf.Webpath + "/view/404.html"
     return
   }
 
   url := r.PostForm.Get("hozonsite")
   // HTTPかHTTPSじゃない場合
-  if !checkprefix(url) {
+  if !Checkprefix(url) {
     data.Err = i18n["errfuseiurl"]
-    ftmpl[0] = cnf.webpath + "/view/404.html"
+    ftmpl[0] = cnf.Webpath + "/view/404.html"
     return
   }
 
-  eurl := stripurl(url)
-  exist = checkexist(eurl, cnf.datapath)
+  eurl := Stripurl(url)
+  exist = Checkexist(eurl, cnf.Datapath)
   if len(exist) == 0 || r.PostForm.Get("agree") == "1" {
-    path := mkdirs(eurl, cnf.datapath)
-    getpage(url, path)
-    scanpage(path, eurl, cnf.datapath)
+    path := Mkdirs(eurl, cnf.Datapath)
+    Getpage(url, path)
+    Scanpage(path, eurl, cnf.Datapath)
     http.Redirect(
       w,
       r,
-      cnf.domain + strings.Replace(path, cnf.datapath, "", 1),
+      cnf.Domain + strings.Replace(path, cnf.Datapath, "", 1),
       http.StatusSeeOther,
     )
     return
   }
 
-  ftmpl[0] = cnf.webpath + "/view/check.html"
+  ftmpl[0] = cnf.Webpath + "/view/check.html"
   data.Url = url
   var existing []Exist
   e := Exist{}
@@ -149,7 +151,7 @@ func handlePost(w http.ResponseWriter, r *http.Request, cnf Config) {
 
     t := time.Unix(ti, 0)
     e.Date = t.Format("2006年01月02日 15:04:05")
-    e.Url = strings.Replace(ex, cnf.datapath, cnf.domain, 1)
+    e.Url = strings.Replace(ex, cnf.Datapath, cnf.Domain, 1)
     existing = append(existing, e)
   }
 
@@ -160,22 +162,27 @@ func handlePost(w http.ResponseWriter, r *http.Request, cnf Config) {
 func siteHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
   return func (w http.ResponseWriter, r *http.Request) {
     ftmpl = []string{
-      cnf.webpath + "/view/index.html",
-      cnf.webpath + "/view/header.html",
-      cnf.webpath + "/view/footer.html",
+      cnf.Webpath + "/view/index.html",
+      cnf.Webpath + "/view/header.html",
+      cnf.Webpath + "/view/footer.html",
     }
-    data = &Page{Ver: version, Ves: strings.ReplaceAll(version, ".", "")}
+
+    version := common.GetVersion()
+    data = &Page{
+      Ver: version,
+      Ves: strings.ReplaceAll(version, ".", ""),
+    }
 
     lang := initloc(r)
     data.Lan = lang
 
-    i18n, err := goliblocale.GetLocale(cnf.webpath + "/locale/" + lang)
+    i18n, err := goliblocale.GetLocale(cnf.Webpath + "/locale/" + lang)
     if err != nil {
       fmt.Printf("liblocaleエラー：%v", err)
       return
     }
     data.i18n = i18n
-    ftmpl[0] = cnf.webpath + "/view/index.html"
+    ftmpl[0] = cnf.Webpath + "/view/index.html"
     tmpl := template.Must(template.ParseFiles(ftmpl[0], ftmpl[1], ftmpl[2]))
 
     if r.Method == "POST" {
@@ -192,7 +199,13 @@ func apiHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
   return func (w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json; charset=UTF-8")
     w.WriteHeader(200)
-    buf, _ := json.MarshalIndent(&Stat{Url: cnf.domain, Ver: version}, "", "  ")
+    version := common.GetVersion()
+
+    buf, _ := json.MarshalIndent(
+      &Stat{Url: cnf.Domain, Ver: version},
+      "",
+      "  ",
+    )
     _, _ = w.Write(buf)
   }
 }
@@ -200,22 +213,25 @@ func apiHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
 // /archive
 func archiveHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
   return func (w http.ResponseWriter, r *http.Request) {
+    version := common.GetVersion()
+
     ftmpl := []string{
-      cnf.webpath + "/view/index.html",
-      cnf.webpath + "/view/header.html",
-      cnf.webpath + "/view/footer.html",
+      cnf.Webpath + "/view/index.html",
+      cnf.Webpath + "/view/header.html",
+      cnf.Webpath + "/view/footer.html",
     }
+
     data := &Page{Ver: version, Ves: strings.ReplaceAll(version, ".", "")}
     lang := initloc(r)
     data.Lan = lang
 
-    i18n, err := goliblocale.GetLocale(cnf.webpath + "/locale/" + lang)
+    i18n, err := goliblocale.GetLocale(cnf.Webpath + "/locale/" + lang)
     if err != nil {
       fmt.Printf("liblocaleエラー：%v", err)
       return
     }
     data.i18n = i18n
-    ftmpl[0] = cnf.webpath + "/view/index.html"
+    ftmpl[0] = cnf.Webpath + "/view/index.html"
     tmpl := template.Must(template.ParseFiles(ftmpl[0], ftmpl[1], ftmpl[2]))
     path := strings.TrimPrefix(r.URL.Path, "/archive/")
 
@@ -233,7 +249,7 @@ func archiveHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
       pth += "index.html"
     }
 
-    file := cnf.datapath + pth
+    file := cnf.Datapath + pth
     if _, err := os.Stat(file); os.IsNotExist(err) {
       http.Redirect(w, r, "/404", http.StatusSeeOther)
       return
@@ -247,7 +263,7 @@ func archiveHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
 
     data.Body = string(bdy)
     tmpl = template.Must(
-      template.ParseFiles(cnf.webpath + "/view/archive.html"),
+      template.ParseFiles(cnf.Webpath + "/view/archive.html"),
     )
     tmpl.Execute(w, data)
     data = nil
@@ -255,11 +271,11 @@ func archiveHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
 }
 
 // サーバー
-func serv (cnf Config, port int) {
+func Serv (cnf Config, port int) {
   http.Handle(
     "/static/",
     http.StripPrefix("/static/",
-    http.FileServer(http.Dir(cnf.webpath + "/static"))),
+    http.FileServer(http.Dir(cnf.Webpath + "/static"))),
   )
 
   http.HandleFunc("/api/", apiHandler(cnf))
@@ -267,9 +283,9 @@ func serv (cnf Config, port int) {
   http.HandleFunc("/", siteHandler(cnf))
 
   fmt.Println(fmt.Sprint(
-    "http://" + cnf.ip + ":",
+    "http://" + cnf.IP + ":",
     port,
     " でサーバーを実行中。終了するには、CTRL+Cを押して下さい。"),
   )
-  http.ListenAndServe(fmt.Sprint(cnf.ip + ":", port), nil)
+  http.ListenAndServe(fmt.Sprint(cnf.IP + ":", port), nil)
 }

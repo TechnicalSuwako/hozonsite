@@ -1,4 +1,4 @@
-package main
+package src
 
 func getmime () map[string]string {
   return map[string]string {
