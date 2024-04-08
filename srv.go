@@ -208,7 +208,7 @@ func archiveHandler (cnf Config) func (http.ResponseWriter, *http.Request) {
 
 // サーバー
 func serv (cnf Config, port int) {
-  http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+  http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(cnf.webpath + "/static"))))
 
   http.HandleFunc("/api/", apiHandler(cnf))
   http.HandleFunc("/archive/", archiveHandler(cnf))
