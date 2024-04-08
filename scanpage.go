@@ -15,37 +15,46 @@ import (
 func scanpage (path string, domain string, thisdomain string) error {
   // 先に保存したページを読み込む
   fn, err := os.ReadFile(path + "/index.html")
-  if err != nil {
-    return err
-  }
+  if err != nil { return err }
 
   // 要らないタグを削除
-  var script = regexp.MustCompile(`(<script.*</script>)`).ReplaceAllString(string(fn), "")
-  var noscript = regexp.MustCompile(`(<noscript.*</noscript>)`).ReplaceAllString(string(script), "")
-  var audio = regexp.MustCompile(`(<audio.*</audio>)`).ReplaceAllString(string(noscript), "")
-  var video = regexp.MustCompile(`(<video.*</video>)`).ReplaceAllString(string(audio), "")
-  var iframe = regexp.MustCompile(`(<iframe.*</iframe>)`).ReplaceAllString(string(video), "")
+  var script = regexp.MustCompile(
+    `(<script.*</script>)`).ReplaceAllString(string(fn), "",
+  )
+  var noscript = regexp.MustCompile(
+    `(<noscript.*</noscript>)`).ReplaceAllString(string(script), "",
+  )
+  var audio = regexp.MustCompile(
+    `(<audio.*</audio>)`).ReplaceAllString(string(noscript), "",
+  )
+  var video = regexp.MustCompile(
+    `(<video.*</video>)`).ReplaceAllString(string(audio), "",
+  )
+  var iframe = regexp.MustCompile(
+    `(<iframe.*</iframe>)`).ReplaceAllString(string(video), "",
+  )
   // 追加ダウンロード＋ローカル化
-  var ass = regexp.MustCompile(`(<img.*src=['"]|<meta.*content=['"]|<link.*href=['"])(.*\.)(png|webp|jpg|jpeg|gif|css|js|ico|svg|ttf|woff2)(\?[^'"]*)?`)
+  var ass = regexp.MustCompile(
+    // ルールに違反けど、長いからしょうがない・・・
+    `(<img.*src=['"]|<meta.*content=['"]|<link.*href=['"])(.*\.)(png|webp|jpg|jpeg|gif|css|js|ico|svg|ttf|woff2)(\?[^'"]*)?`,
+  )
 
   // 必要であれば、ページ内のURLを修正
   spath := "static/"
-  if !strings.HasSuffix(path, "/") {
-    spath = "/" + spath
-  }
+  if !strings.HasSuffix(path, "/") { spath = "/" + spath }
   spath = path + spath
 
   // また、追加ダウンロードのファイルに上記のフォルダを創作
   err = os.Mkdir(spath, 0755)
-  if err != nil {
-    return err
-  }
+  if err != nil { return err }
 
   repmap := make(map[string]string)
 
   for _, cssx := range ass.FindAllString(iframe, -1) {
     // ページ内のURLを受け取る
-    s := regexp.MustCompile(`(.*src=['"]|.*content=['"]|.*href=['"])`).Split(cssx, -1)
+    s := regexp.MustCompile(
+      `(.*src=['"]|.*content=['"]|.*href=['"])`).Split(cssx, -1,
+    )
     ss := regexp.MustCompile(`(['"].*)`).Split(s[1], -1)
 
     ogurl := ss[0] // 変わる前に元のURLを保存して
@@ -60,43 +69,36 @@ func scanpage (path string, domain string, thisdomain string) error {
     filename := fss[len(fss)-1]
 
     // httpかhttpsで始まる場合
-    if strings.HasPrefix(ss[0], "http://") || strings.HasPrefix(ss[0], "https://") {
+    if strings.HasPrefix(ss[0], "http://") || 
+       strings.HasPrefix(ss[0], "https://") {
       assdom = fss[2]
     }
 
     // フォルダの創作
     asspath := path + "/static/" + assdom
     err = os.MkdirAll(asspath, 0755)
-    if err != nil { // 出来なければ、死ね
-      return err
-    }
+    // 出来なければ、死ね
+    if err != nil { return err }
 
-    if filename == "" { // ファイル名がなければ、次に値にスキップしてね
-      continue
-    }
+    // ファイル名がなければ、次に値にスキップしてね
+    if filename == "" { continue }
 
-    if strings.HasPrefix(ss[0], "http://") || strings.HasPrefix(ss[0], "https://") { // httpかhttpsで始まったら、ダウンロードだけしよう
+    // httpかhttpsで始まったら、ダウンロードだけしよう
+    if strings.HasPrefix(ss[0], "http://") ||
+       strings.HasPrefix(ss[0], "https://") {
       err = dlres(ss[0], filepath.Join(asspath, filename))
-      if err != nil { // 出来なければ、死ね
-        return err
-      }
-    } else { // ローカルファイルなら、ちょっと変更は必要となるかしら
+      if err != nil { return err }
+    } else {
+      // ローカルファイルなら、ちょっと変更は必要となるかしら
       u, err := url.Parse(domain)
-      if err != nil { // 出来なければ、死ね
-        return err
-      }
+      if err != nil { return err }
 
       rel, err := url.Parse(ss[0])
-      if err != nil { // 出来なければ、死ね
-        return err
-      }
+      if err != nil { return err }
 
       af := u.ResolveReference(rel).String()
-
       err = dlres(af, filepath.Join(asspath, filename))
-      if err != nil { // 出来なければ、死ね
-        return err
-      }
+      if err != nil { return err }
     }
 
     repmap[ogurl] = filepath.Join("/static", assdom, filename)
@@ -104,7 +106,7 @@ func scanpage (path string, domain string, thisdomain string) error {
       repmap[ogurl] = filepath.Join("/static", filename)
     }
 
-    if err != nil { // 出来なければ、死ね
+    if err != nil {
       fmt.Println(err)
       return errors.New("ダウンロードに失敗：")
     }
@@ -118,12 +120,13 @@ func scanpage (path string, domain string, thisdomain string) error {
 
   // index.htmlファイルを更新する
   err = os.WriteFile(path + "/index.html", []byte(iframe), 0644)
-  if err != nil { // 出来なければ、死ね
+  if err != nil {
     fmt.Println(err)
     return errors.New("書込に失敗")
   }
 
-  return nil // エラーが出なかったから、返すのは不要
+  // エラーが出なかったから、返すのは不要
+  return nil
 }
 
 // 画像、JS、CSS等ファイルのURLでパラメートルがある場合
@@ -141,12 +144,11 @@ func stripver (durl string) string {
 func dlres (durl string, dest string) error {
   // ダウンロード
   res, err := http.Get(durl)
-  if err != nil {
-    return err
-  }
+  if err != nil { return err }
   defer res.Body.Close()
 
-  dest = stripver(dest) // URLでパラメートルがあれば、消す
+  // URLでパラメートルがあれば、消す
+  dest = stripver(dest)
 
   // MIMEタイプを確認
   ct := res.Header.Get("Content-Type")
@@ -159,16 +161,12 @@ func dlres (durl string, dest string) error {
 
   // ファイルを作成
   f, err := os.Create(dest)
-  if err != nil {
-    return err
-  }
+  if err != nil { return err }
   defer f.Close()
 
   // ファイルを書き込む
   _, err = io.Copy(f, res.Body)
-  if err != nil {
-    return err
-  }
+  if err != nil { return err }
 
   return nil
 }

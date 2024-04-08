@@ -10,7 +10,9 @@ import (
 
 // HTTPかHTTPSの確認
 func checkprefix (url string) bool {
-  return strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://")
+  return strings.HasPrefix(
+    url, "http://") || strings.HasPrefix(url, "https://",
+  )
 }
 
 // ページは既に存在するの？

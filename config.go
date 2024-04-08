@@ -13,9 +13,9 @@ type Config struct {
   configpath, webpath, datapath, domain, ip string
 }
 
-func getconf () (Config, error) {
-  var cnf Config
+var cnf Config
 
+func getconf () (Config, error) {
   // バイナリ、データ、及びFreeBSDとNetBSDの場合、コンフィグ
   prefix := "/usr"
   // BSDだけはただの/usrではない
@@ -40,7 +40,9 @@ func getconf () (Config, error) {
   data, err := ioutil.ReadFile(cnf.configpath)
   if err != nil {
     fmt.Println("confif.jsonを開けられません：", err)
-    return cnf, errors.New("コンフィグファイルは " + cnf.configpath + " に創作して下さい。")
+    return cnf, errors.New(
+      "コンフィグファイルは " + cnf.configpath + " に創作して下さい。",
+    )
   }
 
   var payload map[string]interface{}
@@ -56,7 +58,9 @@ func getconf () (Config, error) {
   }
   if _, err := os.Stat(payload["webpath"].(string)); err != nil {
     fmt.Printf("%v\n", err)
-    return cnf, errors.New("mkdiorコマンドをつかって、 " + payload["webpath"].(string))
+    return cnf, errors.New(
+      "mkdiorコマンドをつかって、 " + payload["webpath"].(string),
+    )
   }
   cnf.webpath = payload["webpath"].(string) // データパス
   cnf.domain = payload["domain"].(string) // ドメイン名
