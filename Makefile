@@ -1,20 +1,9 @@
-NAME=hozonsite
-VERSION := $(shell cat main.go | grep "var version" | awk '{print $$4}' | sed "s/\"//g")
-# Linux、Illumos
-PREFIX=/usr
-# FreeBSDとOpenBSD
-#PREFIX=/usr/local
-# NetBSD
-#PREFIX=/usr/pkg
-MANPREFIX=${PREFIX}/share/man
-# Linux、Illumos、とOpenBSD
-CNFPREFIX=/etc
-# FreeBSD
-#CNFPREFIX=/usr/local/etc
-# NetBSD
-#CNFPREFIX=/usr/pkg/etc
+NAME!=cat common/common.go | grep "var sofname" | awk '{print $$4}' | sed "s/\"//g"
+VERSION!=cat common/common.go | grep "var version" | awk '{print $$4}' | sed "s/\"//g"
+PREFIX=/usr/local
+MANPREFIX=${PREFIX}/man
+CNFPREFIX?=/etc
 CC=CGO_ENABLED=0 go build
-# リリース。なし＝デバッグ。
 RELEASE=-ldflags="-s -w" -buildvcs=false
 
 all:
@@ -50,12 +39,12 @@ clean:
 dist: clean
 	mkdir -p ${NAME}-${VERSION}
 	cp -R LICENSE.txt Makefile README.md CHANGELOG.md\
-		view static logo.jpg\
-		${NAME}.1 *.go *.json go.mod go.sum ${NAME}-${VERSION}
+		view static common src logo.jpg\
+		${NAME}.1 main.go *.json go.mod go.sum ${NAME}-${VERSION}
 	tar zcfv ${NAME}-${VERSION}.tar.gz ${NAME}-${VERSION}
 	rm -rf ${NAME}-${VERSION}
 
-install: all
+install:
 	mkdir -p ${DESTDIR}${PREFIX}/bin
 	cp -f ${NAME} ${DESTDIR}${PREFIX}/bin
 	chmod 755 ${DESTDIR}${PREFIX}/bin/${NAME}
