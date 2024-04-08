@@ -2,6 +2,7 @@
 * 静的ファイルの修正
 * 新しいルールに従い
 * GNU MakeからBSD Makeに変更
+* GPLv2→BSD2clouseライセンスに変更
 
 # 1.1.0
 * 言語はliblocale化
