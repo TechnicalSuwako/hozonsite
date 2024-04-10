@@ -1,2 +1,4 @@
 gitler.moe/suwako/goliblocale v1.0.0 h1:QiQKNzdgpavwmAaYhAb5pth0I6qS8IJ7q2hYAgpXacU=
 gitler.moe/suwako/goliblocale v1.0.0/go.mod h1:pdv9Go5taevY8ClBOA+oLXjGap7G1RmIVKUMF8HSJmU=
+golang.org/x/text v0.14.0 h1:ScX5w1eTa3QqT8oi6+ziP7dTV1S2+ALU0bI+0zXKWiQ=
+golang.org/x/text v0.14.0/go.mod h1:18ZOQIKpY8NJVqYksKHtTdi31H5itFRjB5/qKTNYzSU=
